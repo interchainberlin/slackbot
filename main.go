@@ -274,7 +274,91 @@ func brrr(userid string, text []string) string {
 	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
 }
 func send(userid string, text []string) string {
-	return "send"
+
+	if len(text) != 2 {
+		return "Sorry, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt"
+	}
+
+	// confirm sender user id key exists
+	// if not create key
+	// if not create account
+	senderID, senderUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), senderID)
+	}
+	err = confirmUser(senderID, senderUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	// confirm recipientID key exists
+	// if not create key
+	// if not create account
+
+	recipientID, recipientUsername, err := getUserID(strings.Split(text[0], "|")[0][2:])
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), recipientID)
+	}
+	err = confirmUser(recipientID, recipientUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	emoji := text[1]
+	if emojiCodeMap[emoji] != "" {
+		emoji = emojiCodeMap[emoji]
+	}
+	command := fmt.Sprintf("pooltoycli tx send %s $(pooltoycli keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to recipientID
+	err, out, errout := Shellout(command)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+
+	type TxResult struct {
+		Height string
+		Txhash string
+		RawLog string
+	}
+
+	var txResult TxResult
+	json.Unmarshal([]byte(out), &txResult)
+
+	fmt.Println("txResult.Txhash", txResult.Txhash)
+	// wait until the tx is processed
+	time.Sleep(5 * time.Second)
+
+	query := fmt.Sprintf("pooltoycli q tx %s", txResult.Txhash)
+	err, out, errout = Shellout(query)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	var qResult map[string]interface{}
+	json.Unmarshal([]byte(out), &qResult)
+
+	fmt.Println("qResult", qResult)
+	fmt.Println("qResult[\"codespace\"]", qResult["codespace"])
+
+	// codespace is part of an error log
+	if qResult["codespace"] != nil {
+		wasInsufficient := strings.Index(qResult["raw_log"].(string), "insufficient funds") != -1
+		if wasInsufficient {
+			return fmt.Sprintf("Sorry you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", emoji, recipientUsername)
+		}
+		return "Sorry, something went wrong\n" + out
+	}
+
+	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
 }
 func balance(userid string, text []string) string {
 	return "balance"
