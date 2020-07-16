@@ -222,6 +222,9 @@ func brrr(userid string, text []string) string {
 	}
 
 	emoji := text[1]
+	fmt.Printf("emoji: '%s'\n", emoji)
+	fmt.Println("emojiCodeMap", emojiCodeMap[emoji])
+
 	if emojiCodeMap[emoji] != "" {
 		emoji = emojiCodeMap[emoji]
 	}
