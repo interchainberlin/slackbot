@@ -1085,6 +1085,7 @@ var emojiCodeMap = map[string]string{
 	":flag-cx:":                                                "\U0001f1e8\U0001f1fd",
 	":flag-cy:":                                                "\U0001f1e8\U0001f1fe",
 	":flag-cz:":                                                "\U0001f1e8\U0001f1ff",
+	":flag-de:":                                                "\U0001f1e9\U0001f1ea",
 	":flag-dg:":                                                "\U0001f1e9\U0001f1ec",
 	":flag-dj:":                                                "\U0001f1e9\U0001f1ef",
 	":flag-dk:":                                                "\U0001f1e9\U0001f1f0",
