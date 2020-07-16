@@ -40,8 +40,17 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	text := r.Form["text"]
-	fmt.Println(text[0])
+
+	// field info here: https://api.slack.com/interactivity/slash-commands
+
+	command := r.Form["command"][0]
+	userid := r.Form["user_id"][0]
+	username := r.Form["user_name"][0]
+	channelid := r.Form["channel_id"][0]
+	channelname := r.Form["channel_name"][0]
+	text := r.Form["text"][0]
+
+	fmt.Println("command: ", command, "\nuser_id: ", userid, "\nuser_name: ", username, "\nchannel_id", channelid, "\nchannel_name:", channelname, "\ntext: ", text)
 
 	botReply := "hello!"
 
