@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	token = os.Getenv("COWSAY_TOKEN")
+	token = os.Getenv("VERIFICATION_TOKEN")
 	if "" == token {
 		panic("COWSAY_TOKEN is not set!")
 	}
