@@ -20,7 +20,7 @@ var (
 func init() {
 	token = os.Getenv("VERIFICATION_TOKEN")
 	if "" == token {
-		panic("COWSAY_TOKEN is not set!")
+		panic("VERIFICATION_TOKEN is not set!")
 	}
 
 	if "" != os.Getenv("PORT") {
@@ -28,7 +28,7 @@ func init() {
 	}
 }
 
-func cowHandler(w http.ResponseWriter, r *http.Request) {
+func botHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -43,7 +43,7 @@ func cowHandler(w http.ResponseWriter, r *http.Request) {
 	text := r.Form["text"]
 	fmt.Println(text[0])
 
-	botReply := "moo"
+	botReply := "hello!"
 
 	jsonResp, _ := json.Marshal(struct {
 		Type string `json:"response_type"`
@@ -58,6 +58,6 @@ func cowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", cowHandler)
+	http.HandleFunc("/", botHandler)
 	log.Fatalln(http.ListenAndServe(":"+port, nil))
 }
