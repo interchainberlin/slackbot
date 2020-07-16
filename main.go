@@ -365,11 +365,11 @@ func balance(userid string, text []string) string {
 	if len(text) != 1 {
 		return "Sorry, I don't understand that command. Please follow the format '/balance [user]'"
 	}
-	dd
+
 	// confirm sender user id key exists
 	// if not create key
 	// if not create account
-	queriedID, queriedUsername, err := getUserID(userid)
+	queriedID, queriedUsername, err := getUserID(strings.Split(text[0], "|")[0][2:])
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), queriedID)
 	}
@@ -378,7 +378,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoycli q account $(pooltoycli keys show %s -a) -y", queriedID)
+	command := fmt.Sprintf("pooltoycli q account $(pooltoycli keys show %s -a) | jq \".value.coins\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -397,14 +397,18 @@ func balance(userid string, text []string) string {
 		Denom  string
 		Amount string
 	}
-	var result map[string]interface{}
-	json.Unmarshal([]byte(out), &result)
-	coins := result["value"].(map[string]interface{})["coins"].([]Coin)
+	var coins []Coin
+	json.Unmarshal([]byte(out), &coins)
+	// coins := result["value"].(map[string]interface{})["coins"].([]Coin)
 
 	fmt.Println("Coins", coins)
-	balancetext := fmt.Sprintf("%s's balance is:\n", queriedUsername)
+	balancetext := fmt.Sprintf("%s's balance:\n", queriedUsername)
 	for i := 0; i < len(coins); i++ {
 		balancetext += coins[i].Amount + " " + coins[i].Denom + "\n"
+	}
+
+	if len(coins) == 0 {
+		balancetext = fmt.Sprintf("%s is broke 🕳", queriedUsername)
 	}
 	return balancetext
 }
