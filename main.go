@@ -129,7 +129,7 @@ func getUserID(userID string) (string, string, error) {
 		return userID, "", err
 	}
 
-	username := strings.ReplaceAll(user.Profile.DisplayNameNormalized, " ", "_")
+	username := user.Profile.DisplayNameNormalized
 	return user.ID, username, nil
 	// fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
 }
@@ -147,6 +147,7 @@ func Shellout(command string) (error, string, string) {
 }
 
 func createNewUserAccount(user, username string) error {
+	username = strings.ReplaceAll(username, " ", "_")
 	err, out, errout := Shellout(fmt.Sprintf("pooltoycli tx pooltoy create-user $(pooltoycli keys show %s -a) false %s %s --from alice -y", user, username, user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
@@ -230,25 +231,47 @@ func brrr(userid string, text []string) string {
 	// create the CLI command for faucet from userid to recipientID
 	err, out, errout := Shellout(command)
 
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
 	// parse various responses
 	if err != nil {
 		return err.Error()
 	}
 
-	type result struct {
+	type TxResult struct {
 		Height string
 		Txhash string
 		RawLog string
 	}
 
-	json.Unmarshal([]byte(out), &result)
+	var txResult TxResult
+	json.Unmarshal([]byte(out), &txResult)
 
-	fmt.Println("result", result.Txhash)
+	fmt.Println("txResult.Txhash", txResult.Txhash)
+	// wait until the tx is processed
+	time.Sleep(5 * time.Second)
+
+	query := fmt.Sprintf("pooltoycli q tx %s", txResult.Txhash)
+	err, out, errout = Shellout(query)
 
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
-	return out
+
+	var qResult map[string]interface{}
+	json.Unmarshal([]byte(out), &qResult)
+
+	fmt.Println("qResult", qResult)
+	fmt.Println("qResult[\"codespace\"]", qResult["codespace"])
+
+	// codespace is part of an error log
+	if qResult["codespace"] != nil {
+		return "Sorry, you can only send an emoji once a day. Please try again tomorrow 📆"
+	}
+
+	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
 }
 func send(userid string, text []string) string {
 	return "send"
