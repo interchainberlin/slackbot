@@ -251,10 +251,109 @@ func brrr(userid string, text []string) string {
 	return out
 }
 func send(userid string, text []string) string {
-	return "send"
+
+	if len(text) != 2 {
+		return "Sorry, I don't understand that command. Please follow the format '/send [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt"
+	}
+
+	// confirm sender user id key exists
+	// if not create key
+	// if not create account
+	senderID, senderUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), senderID)
+	}
+	err = confirmUser(senderID, senderUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	// confirm recipientID key exists
+	// if not create key
+	// if not create account
+
+	recipientID, recipientUsername, err := getUserID(strings.Split(text[0], "|")[0][2:])
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), recipientID)
+	}
+	err = confirmUser(recipientID, recipientUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	emoji := text[1]
+	if emojiCodeMap[emoji] != "" {
+		emoji = emojiCodeMap[emoji]
+	}
+	command := fmt.Sprintf("pooltoycli tx send %s $(pooltoycli keys show %s -a) %s --from %s -y", senderID, recipientID, emoji, senderID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to recipientID
+	err, out, errout := Shellout(command)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+
+	type result struct {
+		Height string
+		Txhash string
+		RawLog string
+	}
+
+	json.Unmarshal([]byte(out), &result)
+
+	fmt.Println("result", result.Txhash)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+	return out
 }
 func balance(userid string, text []string) string {
-	return "balance"
+
+	if len(text) != 1 {
+		return "Sorry, I don't understand that command. Please follow the format '/balance [user]'"
+	}
+
+	// confirm user id key exists
+	// if not create key
+	// if not create account
+	queriedID, queriedUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), queriedID)
+	}
+	err = confirmUser(queriedID, queriedUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	command := fmt.Sprintf("pooltoycli q account $(pooltoycli keys show %s -a) -y", queriedID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to recipientID
+	err, out, errout := Shellout(command)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+
+	type result struct {
+		Height string
+		Txhash string
+		RawLog string
+	}
+
+	json.Unmarshal([]byte(out), &result)
+
+	fmt.Println("result", result.Txhash)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+	return out
 }
 
 func main() {
