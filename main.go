@@ -361,7 +361,52 @@ func send(userid string, text []string) string {
 	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
 }
 func balance(userid string, text []string) string {
-	return "balance"
+
+	if len(text) != 1 {
+		return "Sorry, I don't understand that command. Please follow the format '/balance [user]'"
+	}
+	dd
+	// confirm sender user id key exists
+	// if not create key
+	// if not create account
+	queriedID, queriedUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), queriedID)
+	}
+	err = confirmUser(queriedID, queriedUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	command := fmt.Sprintf("pooltoycli q account $(pooltoycli keys show %s -a) -y", queriedID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to queriedID
+	err, out, errout := Shellout(command)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+
+	type Coin struct {
+		Denom  string
+		Amount string
+	}
+	var result map[string]interface{}
+	json.Unmarshal([]byte(out), &result)
+	coins := result["value"].(map[string]interface{})["coins"].([]Coin)
+
+	fmt.Println("Coins", coins)
+	balancetext := fmt.Sprintf("%s's balance is:\n", queriedUsername)
+	for i := 0; i < len(coins); i++ {
+		balancetext += coins[i].Amount + " " + coins[i].Denom + "\n"
+	}
+	return balancetext
 }
 
 func main() {
