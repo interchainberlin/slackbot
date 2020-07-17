@@ -271,16 +271,12 @@ func brrr(userid string, text []string) string {
 
 	// codespace is part of an error log
 	if qResult["codespace"] != nil {
-		return "Sorry, you can only send an emoji once a day. Please try again tomorrow 📆"
+		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
-	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
+	return fmt.Sprintf("Success %s! You sent %s a %s. Check their balance like: /balance @%s", senderUsername, recipientUsername, emoji, recipientUsername)
 }
 func send(userid string, text []string) string {
-
-	if len(text) != 2 {
-		return "Sorry, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt"
-	}
 
 	// confirm sender user id key exists
 	// if not create key
@@ -292,6 +288,10 @@ func send(userid string, text []string) string {
 	err = confirmUser(senderID, senderUsername)
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	if len(text) != 2 {
+		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt", senderUsername)
 	}
 
 	// confirm recipientID key exists
@@ -356,17 +356,30 @@ func send(userid string, text []string) string {
 	if qResult["codespace"] != nil {
 		wasInsufficient := strings.Index(qResult["raw_log"].(string), "insufficient funds") != -1
 		if wasInsufficient {
-			return fmt.Sprintf("Sorry you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", emoji, recipientUsername)
+			return fmt.Sprintf("Sorry %s you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", senderUsername, emoji, recipientUsername)
 		}
-		return "Sorry, something went wrong\n" + out
+		return fmt.Sprintf("Sorry %s, something went wrong\n%s", senderUsername, out)
 	}
 
-	return fmt.Sprintf("Success! You sent %s a %s. Check their balance like: /balance @%s", recipientUsername, emoji, recipientUsername)
+	return fmt.Sprintf("Success %s! You sent %s a %s. Check their balance like: /balance @%s", senderUsername, recipientUsername, emoji, recipientUsername)
 }
+
 func balance(userid string, text []string) string {
 
+	// confirm sender user id key exists
+	// if not create key
+	// if not create account
+	senderID, senderUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), senderID)
+	}
+	err = confirmUser(senderID, senderUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
 	if len(text) != 1 {
-		return "Sorry, I don't understand that command. Please follow the format '/balance [user]'"
+		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/balance [user]'", senderUsername)
 	}
 
 	// confirm sender user id key exists
