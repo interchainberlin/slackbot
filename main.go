@@ -101,11 +101,13 @@ func handleCommand(responseURL, command, userid string, textArray []string) {
 	}
 
 	jsonResp, _ := json.Marshal(struct {
-		Type string `json:"response_type"`
-		Text string `json:"text"`
+		Type    string `json:"response_type"`
+		Replace bool   `json:"replace_original"`
+		Text    string `json:"text"`
 	}{
-		Type: "in_channel",
-		Text: fmt.Sprintf("```%s```", botReply),
+		Type:    "in_channel",
+		Replace: true,
+		Text:    fmt.Sprintf("```%s```", botReply),
 	})
 
 	fmt.Println("responseURL", responseURL)
@@ -267,6 +269,11 @@ func tilbrrr(userid string, text []string) string {
 	}
 	out = strings.ReplaceAll(out, "\"", "")
 	out = strings.ReplaceAll(out, "\n", "")
+
+	if out == "0" {
+		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
+	}
+
 	_, err = strconv.Atoi(out)
 	if err != nil {
 		return err.Error()
@@ -279,7 +286,7 @@ func tilbrrr(userid string, text []string) string {
 		fmt.Println(err)
 	}
 
-	return timeleft.String()
+	return fmt.Sprintf("⏳ %s til %s can brrr again.", timeleft.String(), queriedUsername)
 }
 func brrr(userid string, text []string) string {
 
