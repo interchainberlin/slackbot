@@ -2,10 +2,31 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/hako/durafmt"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestTime(t *testing.T) {
+	out := "\"6400\""
+	out = strings.ReplaceAll(out, "\"", "")
+	// i, err := strconv.Atoi(out)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// timeleft := time.Duration(int64(i)).String()
+
+	timeleft, err := durafmt.ParseString(out + "s")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("timeleft", timeleft)
+	require.True(t, false)
+
+}
 
 func TestConfirmUser(t *testing.T) {
 	user := "doug"

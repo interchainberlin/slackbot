@@ -16,6 +16,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/hako/durafmt"
 	"github.com/slack-go/slack"
 )
 
@@ -92,6 +93,8 @@ func handleCommand(responseURL, command, userid string, textArray []string) {
 		botReply = send(userid, textArray)
 	case "/balance":
 		botReply = balance(userid, textArray)
+	case "/til-brrr":
+		botReply = tilbrrr(userid, textArray)
 	default:
 		botReply = fmt.Sprintf("Sorry I don't understand that command %s.", command)
 	}
@@ -205,6 +208,65 @@ func confirmUser(user, username string) error {
 		}
 	}
 	return nil
+}
+
+// slashes
+func tilbrrr(userid string, text []string) string {
+	// confirm sender user id key exists
+	// if not create key
+	// if not create account
+	senderID, senderUsername, err := getUserID(userid)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), senderID)
+	}
+	err = confirmUser(senderID, senderUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	if len(text) != 1 {
+		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/til-brrr [user]'", senderUsername)
+	}
+
+	// confirm queried user id key exists
+	// if not create key
+	// if not create account
+	queriedID, queriedUsername, err := getUserID(strings.Split(text[0], "|")[0][2:])
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), queriedID)
+	}
+	err = confirmUser(queriedID, queriedUsername)
+	if err != nil {
+		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
+	}
+
+	command := fmt.Sprintf("pooltoycli q faucet when-brrr $(pooltoycli keys show %s -a)", queriedID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to queriedID
+	err, out, errout := Shellout(command)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+	out = strings.ReplaceAll(out, "\"", "")
+	// i, err := strconv.Atoi(out)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// timeleft := time.Duration(int64(i)).String()
+
+	timeleft, err := durafmt.ParseString(out + "s")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return timeleft.String()
 }
 func brrr(userid string, text []string) string {
 
