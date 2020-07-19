@@ -2,26 +2,29 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestConfirmUser(t *testing.T) {
-	user := "asdf"
+	user := "doug"
+	emoji := ":boat:️"
+	recipientID := "recipientID"
+	senderID := "senderID"
+	fmt.Printf("emoji: '%s'\n", emoji)
+	fmt.Println("emojiCodeMap", emojiCodeMap[emoji])
 
-	app := "pooltoycli"
-	arg0 := "keys"
-	arg1 := "show"
-	arg2 := user
-	// arg3 := ""
+	if emojiCodeMap[emoji] != "" {
+		emoji = emojiCodeMap[emoji]
+	}
+	command := fmt.Sprintf("pooltoycli tx faucet mintfor $(pooltoycli keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
+	fmt.Printf("Try command '%s\n", command)
 
-	cmd := exec.Command(app, arg0, arg1, arg2)
-	fmt.Println("cmd", cmd)
-
-	stdout, err := cmd.Output()
-	fmt.Println("stdout", stdout)
+	err, out, errout := Shellout(fmt.Sprintf("pooltoycli q account  $(pooltoycli keys show %s  -a)", user))
 	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
 	require.True(t, false)
 }

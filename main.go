@@ -147,6 +147,7 @@ func Shellout(command string) (error, string, string) {
 }
 
 func createNewUserAccount(user, username string) error {
+	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
 	err, out, errout := Shellout(fmt.Sprintf("pooltoycli tx pooltoy create-user $(pooltoycli keys show %s -a) false %s %s --from alice -y", user, username, user))
 	fmt.Println("err", err)
@@ -156,6 +157,7 @@ func createNewUserAccount(user, username string) error {
 	return nil
 }
 func createNewUserKey(user, username string) error {
+	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
 	err, _, errout := Shellout(fmt.Sprintf("pooltoycli keys add %s", user))
 
 	if err == nil {
@@ -175,6 +177,7 @@ func createNewUserKey(user, username string) error {
 	return createNewUserAccount(user, username)
 }
 func confirmUser(user, username string) error {
+	fmt.Printf("confirmUser(%s, %s)\n", user, username)
 	err, out, errout := Shellout(fmt.Sprintf("pooltoycli keys show %s", user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
@@ -186,6 +189,14 @@ func confirmUser(user, username string) error {
 		} else {
 			fmt.Printf("'%s' didn't match\n", errout)
 			return err
+		}
+	} else {
+		err, out, errout = Shellout(fmt.Sprintf("pooltoycli q account  $(pooltoycli keys show %s  -a)", user))
+		fmt.Println("err", err)
+		fmt.Println("out", out)
+		fmt.Println("errout", errout)
+		if err != nil && strings.Index(errout, "ERROR: unknown address: account") != -1 {
+			return createNewUserAccount(user, username)
 		}
 	}
 	return nil
