@@ -75,7 +75,7 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 		Type string `json:"response_type"`
 		Text string `json:"text"`
 	}{
-		Type: "in_channel",
+		Type: "ephemeral",
 		Text: fmt.Sprintf("```%s```", botReply),
 	})
 
