@@ -232,7 +232,17 @@ func tilbrrr(userid string, text []string) string {
 	// confirm queried user id key exists
 	// if not create key
 	// if not create account
-	queriedID, queriedUsername, err := getUserID(strings.Split(text[0], "|")[0][2:])
+
+	extractedIDArray := strings.Split(text[0], "|")
+	if len(extractedIDArray) < 2 {
+		return fmt.Sprintf("%s does not follow the expected user id format (no |)", text[0])
+	}
+	if len(extractedIDArray[0]) < 3 {
+		return fmt.Sprintf("%s does not follow the expected user id format (len < 3)", text[0])
+	}
+	extractedID := extractedIDArray[0][2:]
+
+	queriedID, queriedUsername, err := getUserID(extractedID)
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), queriedID)
 	}
