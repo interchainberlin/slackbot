@@ -30,6 +30,11 @@ func init() {
 		panic("VERIFICATION_TOKEN is not set!")
 	}
 
+	apitoken := os.Getenv("API_TOKEN")
+	if "" == apitoken {
+		panic("API_TOKEN is not set!")
+	}
+
 	if "" != os.Getenv("PORT") {
 		port = os.Getenv("PORT")
 	}
@@ -442,5 +447,13 @@ func balance(userid string, text []string) string {
 
 func main() {
 	http.HandleFunc("/", botHandler)
-	log.Fatalln(http.ListenAndServe(":"+port, nil))
+
+	crt := os.Getenv("LETSENCRYPT.CRT")
+	key := os.Getenv("LETSENCRYPT.KEY")
+	if crt == "" || key == "" {
+		log.Fatalln(http.ListenAndServe(":"+port, nil))
+	} else {
+		log.Fatalln(http.ListenAndServeTLS(":"+port, crt, key, nil))
+	}
+
 }
