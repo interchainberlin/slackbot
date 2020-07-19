@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -255,10 +256,11 @@ func tilbrrr(userid string, text []string) string {
 		return err.Error()
 	}
 	out = strings.ReplaceAll(out, "\"", "")
-	// i, err := strconv.Atoi(out)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	_, err = strconv.Atoi(out)
+	if err != nil {
+		return err.Error()
+		// fmt.Println(err)
+	}
 	// timeleft := time.Duration(int64(i)).String()
 
 	timeleft, err := durafmt.ParseString(out + "s")
