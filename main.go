@@ -448,8 +448,8 @@ func balance(userid string, text []string) string {
 func main() {
 	http.HandleFunc("/", botHandler)
 
-	crt := os.Getenv("LETSENCRYPT.CRT")
-	key := os.Getenv("LETSENCRYPT.KEY")
+	crt := os.Getenv("LETSENCRYPT_CRT")
+	key := os.Getenv("LETSENCRYPT_KEY")
 	if crt == "" || key == "" {
 		log.Fatalln(http.ListenAndServe(":"+port, nil))
 	} else {
