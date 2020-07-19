@@ -256,6 +256,7 @@ func tilbrrr(userid string, text []string) string {
 		return err.Error()
 	}
 	out = strings.ReplaceAll(out, "\"", "")
+	out = strings.ReplaceAll(out, "\n", "")
 	_, err = strconv.Atoi(out)
 	if err != nil {
 		return err.Error()
