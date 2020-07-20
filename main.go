@@ -318,8 +318,13 @@ func brrr(userid string, text []string) string {
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
+	emoji := strings.TrimSpace(text[1])
 
-	emoji := text[1]
+	// if slack emoji format
+	if strings.Index(emoji, ":") == 0 {
+		emoji = strings.ReplaceAll(text[1], "️", "") // this removes Variation Selector-16 (https://emojipedia.org/variation-selector-16/)
+	}
+
 	fmt.Printf("emoji: '%s'\n", emoji)
 	fmt.Println("emojiCodeMap", emojiCodeMap[emoji])
 

@@ -338,7 +338,7 @@ var emojiCodeMap = map[string]string{
 	":blueberries:":                                            "\U0001fad0",
 	":blush:":                                                  "\U0001f60a",
 	":boar:":                                                   "\U0001f417",
-	":boat:️":                                                  "\u26f5",
+	":boat:":                                                   "\u26f5",
 	":bolivia:":                                                "\U0001f1e7\U0001f1f4",
 	":bomb:":                                                   "\U0001f4a3",
 	":bone:":                                                   "\U0001f9b4",

@@ -30,7 +30,7 @@ func TestTime(t *testing.T) {
 
 func TestConfirmUser(t *testing.T) {
 	user := "doug"
-	emoji := ":boat:️"
+	emoji := ":boat:"
 	recipientID := "recipientID"
 	senderID := "senderID"
 	fmt.Printf("emoji: '%s'\n", emoji)
