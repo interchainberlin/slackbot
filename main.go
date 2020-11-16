@@ -290,7 +290,7 @@ func tilbrrr(userid string, text []string) string {
 }
 func brrr(userid string, text []string) string {
 
-	if len(text) != 2 {
+	if len(text) < 2 {
 		return "Sorry, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt"
 	}
 
