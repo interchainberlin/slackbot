@@ -394,8 +394,8 @@ func send(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	if len(text) != 2 {
-		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt", senderUsername)
+	if len(text) < 2 {
+		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/send [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt", senderUsername)
 	}
 
 	// confirm recipientID key exists
