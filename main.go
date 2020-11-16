@@ -69,6 +69,7 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("command: ", command, "\nuser_id: ", userid, "\nuser_name: ", username, "\nchannel_id", channelid, "\nchannel_name:", channelname, "\ntext: ", text)
 	fmt.Printf("textArray:'%s'\n", textArray)
+	fmt.Printf("textArray len:'%s'\n", len(textArray))
 
 	botReply := "Processing your request, please standby ⏳"
 	jsonResp, _ := json.Marshal(struct {
