@@ -1,6 +1,5 @@
 name: Deploy
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -17,4 +16,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            mkdir ape
+            killall -9 slackbot
+            cd ~/slackbot && git pull && go build
+            ~/slackbot/slackbot &> ~/slackbot.log  &!
