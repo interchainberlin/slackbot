@@ -19,6 +19,7 @@ jobs:
             killall -9 slackbot
             cd ~/slackbot && git pull && go build
             source ~/slackbot/.env
-            whoami >> ~/slackbot.log
-            go env >> ~/slackbot.log
+            whoami >> ~/deploy.log
+            go env >> ~/deploy.log
+            echo $PATH >> ~/deploy.log
             ~/slackbot/slackbot &> ~/slackbot.log  &!
