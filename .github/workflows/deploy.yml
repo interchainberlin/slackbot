@@ -20,4 +20,5 @@ jobs:
             cd ~/slackbot && git pull && go build
             source ~/slackbot/.env
             whoami >> ~/slackbot.log
+            go env >> ~/slackbot.log
             ~/slackbot/slackbot &> ~/slackbot.log  &!
