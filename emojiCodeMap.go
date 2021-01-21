@@ -2186,6 +2186,7 @@ var emojiCodeMap = map[string]string{
 	":lacrosse:":                              "\U0001f94d",
 	":ladder:":                                "\U0001fa9c",
 	":lady_beetle:":                           "\U0001f41e",
+	":ladybug:":                           "\U0001f41e",
 	":lantern:":                               "\U0001f3ee",
 	":laos:":                                  "\U0001f1f1\U0001f1e6",
 	":laptop:":                                "\U0001f4bb",
