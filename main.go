@@ -323,7 +323,7 @@ func brrr(userid string, text []string) string {
 
 	// throw error if no emoji is found
 	if !containsEmoji {
-		emojiError := fmt.Errorf("No emoji found while parsing %s", emoji)
+		emojiError := fmt.Errorf("No emoji found while parsing %s", text[1])
 		return emojiError.Error()
 	}
 
@@ -409,7 +409,7 @@ func send(userid string, text []string) string {
 	emoji, containsEmoji := parseEmoji(text[1])
 	// throw error if no emoji is found
 	if !containsEmoji {
-		emojiError := fmt.Errorf("No emoji found while parsing %s", emoji)
+		emojiError := fmt.Errorf("No emoji found while parsing %s", text[1])
 		return emojiError.Error()
 	}
 
