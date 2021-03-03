@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 // Parse an emoji with optional modifier from a string
 func parseEmoji(inputEmoji string) (string, bool) {
@@ -27,7 +29,14 @@ func parseEmoji(inputEmoji string) (string, bool) {
 		_, hasModifier := emojiModifierCodeMap[modifier]
 
 		if hasModifier && hasEmoji {
-			return emojiCodeMap[parsedEmoji] + emojiModifierCodeMap[modifier], true
+			baseEmoji := emojiCodeMap[parsedEmoji]
+			// \u200d is a seperator for combining emojis
+			indexOfSeperator := strings.Index(baseEmoji, "\u200d")
+			if indexOfSeperator == -1 {
+				return "", false
+			}
+			//build the emoji code in the correct format (seperator needs to come after the modifier)
+			return baseEmoji[:indexOfSeperator] + emojiModifierCodeMap[modifier] + baseEmoji[indexOfSeperator:], true
 		}
 	}
 
