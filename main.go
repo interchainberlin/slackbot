@@ -319,7 +319,13 @@ func brrr(userid string, text []string) string {
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
-	emoji, _ := parseEmoji(text[1])
+	emoji, containsEmoji := parseEmoji(text[1])
+
+	// throw error if no emoji is found
+	if !containsEmoji {
+		emojiError := fmt.Errorf("No emoji found while parsing %s", emoji)
+		return emojiError.Error()
+	}
 
 	command := fmt.Sprintf("pooltoycli tx faucet mintfor $(pooltoycli keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
@@ -400,7 +406,13 @@ func send(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	emoji, _ := parseEmoji(text[1])
+	emoji, containsEmoji := parseEmoji(text[1])
+	// throw error if no emoji is found
+	if !containsEmoji {
+		emojiError := fmt.Errorf("No emoji found while parsing %s", emoji)
+		return emojiError.Error()
+	}
+
 	command := fmt.Sprintf("pooltoycli tx send %s $(pooltoycli keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
