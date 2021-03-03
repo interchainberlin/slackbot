@@ -319,19 +319,14 @@ func brrr(userid string, text []string) string {
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
-	emoji := strings.TrimSpace(text[1])
+	emoji, containsEmoji := parseEmoji(text[1])
 
-	// if slack emoji format
-	if strings.Index(emoji, ":") == 0 {
-		emoji = strings.ReplaceAll(text[1], "️", "") // this removes Variation Selector-16 (https://emojipedia.org/variation-selector-16/)
+	// throw error if no emoji is found
+	if !containsEmoji {
+		emojiError := fmt.Errorf("No emoji found while parsing %s", text[1])
+		return emojiError.Error()
 	}
 
-	fmt.Printf("emoji: '%s'\n", emoji)
-	fmt.Println("emojiCodeMap", emojiCodeMap[emoji])
-
-	if emojiCodeMap[emoji] != "" {
-		emoji = emojiCodeMap[emoji]
-	}
 	command := fmt.Sprintf("pooltoycli tx faucet mintfor $(pooltoycli keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
@@ -411,10 +406,13 @@ func send(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	emoji := text[1]
-	if emojiCodeMap[emoji] != "" {
-		emoji = emojiCodeMap[emoji]
+	emoji, containsEmoji := parseEmoji(text[1])
+	// throw error if no emoji is found
+	if !containsEmoji {
+		emojiError := fmt.Errorf("No emoji found while parsing %s", text[1])
+		return emojiError.Error()
 	}
+
 	command := fmt.Sprintf("pooltoycli tx send %s $(pooltoycli keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
