@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"encoding/json"
 
 	"github.com/hako/durafmt"
 	"github.com/slack-go/slack"
@@ -161,7 +160,7 @@ func Shellout(command string) (error, string, string) {
 func createNewUserAccount(user, username string) error {
 	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
-	err, out, errout := Shellout(fmt.Sprintf("pooltoycli tx pooltoy create-user $(pooltoycli keys show %s -a) false %s %s --from alice -y", user, username, user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy tx pooltoy create-user $(pooltoy keys show %s -a --keyring-backend test) false %s %s --from alice -y", user, username, user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -170,7 +169,7 @@ func createNewUserAccount(user, username string) error {
 }
 func createNewUserKey(user, username string) error {
 	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
-	err, _, errout := Shellout(fmt.Sprintf("pooltoycli keys add %s", user))
+	err, _, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
 
 	if err == nil {
 		path, err := os.Getwd()
@@ -190,7 +189,7 @@ func createNewUserKey(user, username string) error {
 }
 func confirmUser(user, username string) error {
 	fmt.Printf("confirmUser(%s, %s)\n", user, username)
-	err, out, errout := Shellout(fmt.Sprintf("pooltoycli keys show %s", user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys show %s --keyring-backend test", user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -203,7 +202,7 @@ func confirmUser(user, username string) error {
 			return err
 		}
 	} else {
-		err, out, errout = Shellout(fmt.Sprintf("pooltoycli q account  $(pooltoycli keys show %s  -a)", user))
+		err, out, errout = Shellout(fmt.Sprintf("pooltoy q account  $(pooltoy keys show %s  -a --keyring-backend test)", user))
 		fmt.Println("err", err)
 		fmt.Println("out", out)
 		fmt.Println("errout", errout)
@@ -254,7 +253,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoycli q faucet when-brrr $(pooltoycli keys show %s -a)", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr $(pooltoy keys show %s -a)", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -327,7 +326,7 @@ func brrr(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoycli tx faucet mintfor $(pooltoycli keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -355,7 +354,7 @@ func brrr(userid string, text []string) string {
 	// wait until the tx is processed
 	time.Sleep(5 * time.Second)
 
-	query := fmt.Sprintf("pooltoycli q tx %s", txResult.Txhash)
+	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
 	err, out, errout = Shellout(query)
 
 	fmt.Println("err", err)
@@ -413,7 +412,7 @@ func send(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoycli tx send %s $(pooltoycli keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx send %s $(pooltoy keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -441,7 +440,7 @@ func send(userid string, text []string) string {
 	// wait until the tx is processed
 	time.Sleep(5 * time.Second)
 
-	query := fmt.Sprintf("pooltoycli q tx %s", txResult.Txhash)
+	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
 	err, out, errout = Shellout(query)
 
 	fmt.Println("err", err)
@@ -496,7 +495,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoycli q account $(pooltoycli keys show %s -a) | jq \".value.coins\"", queriedID)
+	command := fmt.Sprintf("pooltoy q account $(pooltoy keys show %s -a) | jq \".value.coins\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
