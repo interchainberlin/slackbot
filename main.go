@@ -253,7 +253,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q faucet when-brrr $(pooltoy keys show %s -a)", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -326,7 +326,7 @@ func brrr(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a) %s --from %s -y", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -412,7 +412,7 @@ func send(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoy tx send %s $(pooltoy keys show %s -a) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -495,7 +495,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q account $(pooltoy keys show %s -a) | jq \".value.coins\"", queriedID)
+	command := fmt.Sprintf("pooltoy q account $(pooltoy keys show %s -a --keyring-backend test) | jq \".value.coins\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
