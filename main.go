@@ -273,17 +273,19 @@ func tilbrrr(userid string, text []string) string {
 	}
 	time := TimeLeft{}
 	json.Unmarshal([]byte(out), &time)
+	fmt.Println("TIMELEFT1", time)
 
 	if time.TimeLeft == "0" {
+		fmt.Println("TIMELEFT2", time)
 		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
 	}
 
-	_, err = strconv.Atoi(out)
+	_, err = strconv.Atoi(time.TimeLeft)
 	if err != nil {
 		return err.Error()
 	}
 
-	timeleft, err := durafmt.ParseString(out + "s")
+	timeleft, err := durafmt.ParseString(time.TimeLeft + "s")
 	if err != nil {
 		fmt.Println(err)
 	}
