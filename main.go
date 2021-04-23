@@ -253,7 +253,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test) | jq \".timeLeft\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
