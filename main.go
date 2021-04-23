@@ -267,7 +267,7 @@ func tilbrrr(userid string, text []string) string {
 	if err != nil {
 		return err.Error()
 	}
-	out = strings.ReplaceAll(out, "\n", "")
+	fmt.Println(out)
 
 	if out == "0" {
 		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
