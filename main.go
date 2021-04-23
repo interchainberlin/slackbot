@@ -273,24 +273,23 @@ func tilbrrr(userid string, text []string) string {
 	}
 	time := TimeLeft{}
 	json.Unmarshal([]byte(out), &time)
-	fmt.Println("TIMELEFT1", time)
+	timeLeft := strings.ReplaceAll(time.TimeLeft, "\"", "")
 
-	if time.TimeLeft == "0" {
-		fmt.Println("TIMELEFT2", time)
+	if timeLeft == "0" {
 		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
 	}
 
-	_, err = strconv.Atoi(time.TimeLeft)
+	_, err = strconv.Atoi(timeLeft)
 	if err != nil {
 		return err.Error()
 	}
 
-	timeleft, err := durafmt.ParseString(time.TimeLeft + "s")
+	t, err := durafmt.ParseString(timeLeft + "s")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return fmt.Sprintf("⏳ %s til %s can brrr again.", timeleft.String(), queriedUsername)
+	return fmt.Sprintf("⏳ %s til %s can brrr again.", t.String(), queriedUsername)
 }
 func brrr(userid string, text []string) string {
 
@@ -521,7 +520,6 @@ func balance(userid string, text []string) string {
 	var coins []Coin
 	json.Unmarshal([]byte(out), &coins)
 
-	fmt.Println("Coins", coins)
 	balancetext := fmt.Sprintf("%s's balance:\n", queriedUsername)
 	for i := 0; i < len(coins); i++ {
 		balancetext += coins[i].Amount + " " + coins[i].Denom + "\n"
