@@ -202,7 +202,7 @@ func confirmUser(user, username string) error {
 			return err
 		}
 	} else {
-		err, out, errout = Shellout(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test)", user))
+		err, out, errout = Shellout(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", user))
 		fmt.Println("err", err)
 		fmt.Println("out", out)
 		fmt.Println("errout", errout)
@@ -253,7 +253,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test) | jq \".timeLeft\"", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -267,18 +267,21 @@ func tilbrrr(userid string, text []string) string {
 	if err != nil {
 		return err.Error()
 	}
-	fmt.Println(out)
 
-	if out == "0" {
+	type TimeLeft struct {
+		TimeLeft string
+	}
+	time := TimeLeft{}
+	json.Unmarshal([]byte(out), &time)
+
+	if time.TimeLeft == "0" {
 		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
 	}
 
 	_, err = strconv.Atoi(out)
 	if err != nil {
 		return err.Error()
-		// fmt.Println(err)
 	}
-	// timeleft := time.Duration(int64(i)).String()
 
 	timeleft, err := durafmt.ParseString(out + "s")
 	if err != nil {
@@ -515,7 +518,6 @@ func balance(userid string, text []string) string {
 	}
 	var coins []Coin
 	json.Unmarshal([]byte(out), &coins)
-	// coins := result["value"].(map[string]interface{})["coins"].([]Coin)
 
 	fmt.Println("Coins", coins)
 	balancetext := fmt.Sprintf("%s's balance:\n", queriedUsername)
