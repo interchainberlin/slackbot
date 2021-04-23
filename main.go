@@ -494,7 +494,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances", queriedID)
+	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
