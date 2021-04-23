@@ -202,11 +202,11 @@ func confirmUser(user, username string) error {
 			return err
 		}
 	} else {
-		err, out, errout = Shellout(fmt.Sprintf("pooltoy q account  $(pooltoy keys show %s  -a --keyring-backend test)", user))
+		err, out, errout = Shellout(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test)", user))
 		fmt.Println("err", err)
 		fmt.Println("out", out)
 		fmt.Println("errout", errout)
-		if err != nil && strings.Index(errout, "ERROR: unknown address: account") != -1 {
+		if err != nil && strings.Index(errout, "ERROR: unknown address: bank") != -1 {
 			return createNewUserAccount(user, username)
 		}
 	}
@@ -253,7 +253,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q faucet when-brrr $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -267,7 +267,6 @@ func tilbrrr(userid string, text []string) string {
 	if err != nil {
 		return err.Error()
 	}
-	out = strings.ReplaceAll(out, "\"", "")
 	out = strings.ReplaceAll(out, "\n", "")
 
 	if out == "0" {
@@ -495,7 +494,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q account $(pooltoy keys show %s -a --keyring-backend test) | jq \".value.coins\"", queriedID)
+	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
