@@ -323,9 +323,9 @@ func brrr(userid string, text []string) string {
 	}
 
 	if recipientID == senderID {
-		return fmt.Sprintf("Nice try %s, but you gotta for for your emojis!", senderUsername)
+		return fmt.Sprintf("Nice try %s, but you gotta work for your emojis!", senderUsername)
 	}
-	
+
 	emoji, containsEmoji := parseEmoji(text[1])
 
 	// throw error if no emoji is found
