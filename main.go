@@ -373,10 +373,12 @@ func brrr(userid string, text []string) string {
 	json.Unmarshal([]byte(out), &qResult)
 
 	fmt.Println("qResult", qResult)
-	fmt.Println("qResult[\"codespace\"]", qResult["codespace"])
+	fmt.Println("qResult[\"code\"]", qResult["code"])
 
-	// codespace is part of an error log
-	if qResult["codespace"] != nil {
+	// check if code - 0
+
+	// code is part of an error log
+	if qResult["code"] != 0 {
 		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
