@@ -213,6 +213,30 @@ func confirmUser(user, username string) error {
 	return nil
 }
 
+func checkTimeLeft(queriedID string) string {
+	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
+	fmt.Printf("Try command '%s\n", command)
+
+	// create the CLI command for faucet from userid to queriedID
+	err, out, errout := Shellout(command)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	// parse various responses
+	if err != nil {
+		return err.Error()
+	}
+
+	type TimeLeft struct {
+		TimeLeft string
+	}
+	time := TimeLeft{}
+	json.Unmarshal([]byte(out), &time)
+	return strings.ReplaceAll(time.TimeLeft, "\"", "")
+}
+
 // slashes
 func tilbrrr(userid string, text []string) string {
 	// confirm sender user id key exists
@@ -253,27 +277,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
-	fmt.Printf("Try command '%s\n", command)
-
-	// create the CLI command for faucet from userid to queriedID
-	err, out, errout := Shellout(command)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
-	// parse various responses
-	if err != nil {
-		return err.Error()
-	}
-
-	type TimeLeft struct {
-		TimeLeft string
-	}
-	time := TimeLeft{}
-	json.Unmarshal([]byte(out), &time)
-	timeLeft := strings.ReplaceAll(time.TimeLeft, "\"", "")
+	timeLeft := checkTimeLeft(queriedID)
 
 	if timeLeft == "0" {
 		return fmt.Sprintf("🖨 %s is ready to brrr right now!", queriedUsername)
@@ -334,6 +338,11 @@ func brrr(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
+	timeLeft := checkTimeLeft(senderID)
+	if timeLeft != "0" {
+		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
+	}
+
 	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-4", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
@@ -379,7 +388,7 @@ func brrr(userid string, text []string) string {
 
 	// code is part of an error log
 	if qResult["code"] != 0 {
-		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
+		return fmt.Sprintf("There has been an error: %s", err)
 	}
 
 	return fmt.Sprintf("Success %s! You sent %s a %s. Check their balance like: /balance @%s", senderUsername, recipientUsername, emoji, recipientUsername)
@@ -461,10 +470,12 @@ func send(userid string, text []string) string {
 	json.Unmarshal([]byte(out), &qResult)
 
 	fmt.Println("qResult", qResult)
-	fmt.Println("qResult[\"codespace\"]", qResult["codespace"])
+
+	// check if code - 0
+	fmt.Println("qResult[\"code\"]", qResult["code"])
 
 	// codespace is part of an error log
-	if qResult["codespace"] != nil {
+	if qResult["code"] != nil {
 		wasInsufficient := strings.Index(qResult["raw_log"].(string), "insufficient funds") != -1
 		if wasInsufficient {
 			return fmt.Sprintf("Sorry %s you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", senderUsername, emoji, recipientUsername)
