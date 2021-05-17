@@ -25,6 +25,34 @@ var (
 	token string
 )
 
+type TxResult struct {
+	Height string
+	Txhash string
+	RawLog string
+}
+
+type EventAttribute struct {
+	Key   []byte
+	Value []byte
+	Index bool
+}
+
+type Event struct {
+	Type       string
+	Attributes []EventAttribute
+}
+
+type ResponseCheckTx struct {
+	Code      uint32
+	Data      []byte
+	Log       string
+	Info      string
+	GasWanted int64
+	GasUsed   int64
+	Events    []Event
+	Codespace string
+}
+
 func init() {
 	token = os.Getenv("VERIFICATION_TOKEN")
 	if "" == token {
@@ -100,6 +128,7 @@ func handleCommand(responseURL, command, userid string, textArray []string) {
 		botReply = fmt.Sprintf("Sorry I don't understand that command %s.", command)
 	}
 
+	// TODO: redundant with above?
 	jsonResp, _ := json.Marshal(struct {
 		Type    string `json:"response_type"`
 		Replace bool   `json:"replace_original"`
@@ -128,11 +157,6 @@ func handleCommand(responseURL, command, userid string, textArray []string) {
 }
 func getUserID(userID string) (string, string, error) {
 	api := slack.New(os.Getenv("API_TOKEN"))
-	// fmt.Println("userID", userID)
-	// fmt.Println("usernameOriginal", usernameOriginal)
-	// username := strings.Split(usernameOriginal, "|")[1]
-	// username = username[:len(username)-1]
-	// fmt.Println("username", username)
 
 	user, err := api.GetUserInfo(userID)
 	if err != nil {
@@ -235,6 +259,35 @@ func checkTimeLeft(queriedID string) string {
 	time := TimeLeft{}
 	json.Unmarshal([]byte(out), &time)
 	return strings.ReplaceAll(time.TimeLeft, "\"", "")
+}
+
+func txErr(out string) bool {
+	var txResult TxResult
+	json.Unmarshal([]byte(out), &txResult)
+
+	fmt.Println("txResult.Txhash", txResult.Txhash)
+	// wait until the tx is processed
+	time.Sleep(5 * time.Second)
+
+	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
+	err, out, errout := Shellout(query)
+
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+
+	var qResult ResponseCheckTx
+	json.Unmarshal([]byte(out), &qResult)
+
+	fmt.Println("qResult", qResult)
+	fmt.Println("qResult[\"code\"]", qResult.Code)
+
+	// check if code - 0
+	// code is part of an error log
+	if qResult.Code != 0 {
+		return true
+	}
+	return false
 }
 
 // slashes
@@ -358,36 +411,7 @@ func brrr(userid string, text []string) string {
 		return err.Error()
 	}
 
-	type TxResult struct {
-		Height string
-		Txhash string
-		RawLog string
-	}
-
-	var txResult TxResult
-	json.Unmarshal([]byte(out), &txResult)
-
-	fmt.Println("txResult.Txhash", txResult.Txhash)
-	// wait until the tx is processed
-	time.Sleep(5 * time.Second)
-
-	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
-	err, out, errout = Shellout(query)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
-	var qResult map[string]interface{}
-	json.Unmarshal([]byte(out), &qResult)
-
-	fmt.Println("qResult", qResult)
-	fmt.Println("qResult[\"code\"]", qResult["code"])
-
-	// check if code - 0
-
-	// code is part of an error log
-	if qResult["code"] != 0 {
+	if txErr(out) {
 		return fmt.Sprintf("There has been an error: %s", err)
 	}
 
@@ -446,40 +470,12 @@ func send(userid string, text []string) string {
 		return err.Error()
 	}
 
-	type TxResult struct {
-		Height string
-		Txhash string
-		RawLog string
-	}
+	// TODO: add logging about insufficient funds
+	// if wasInsufficient {
+	// 	return fmt.Sprintf("Sorry %s you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", senderUsername, emoji, recipientUsername)
+	// }
 
-	var txResult TxResult
-	json.Unmarshal([]byte(out), &txResult)
-
-	fmt.Println("txResult.Txhash", txResult.Txhash)
-	// wait until the tx is processed
-	time.Sleep(5 * time.Second)
-
-	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
-	err, out, errout = Shellout(query)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
-	var qResult map[string]interface{}
-	json.Unmarshal([]byte(out), &qResult)
-
-	fmt.Println("qResult", qResult)
-
-	// check if code - 0
-	fmt.Println("qResult[\"code\"]", qResult["code"])
-
-	// codespace is part of an error log
-	if qResult["code"] != nil {
-		wasInsufficient := strings.Index(qResult["raw_log"].(string), "insufficient funds") != -1
-		if wasInsufficient {
-			return fmt.Sprintf("Sorry %s you don't have enough %s to send any to %s. Try convincing one of your co-workers to /brrr you some 🖨", senderUsername, emoji, recipientUsername)
-		}
+	if txErr(out) {
 		return fmt.Sprintf("Sorry %s, something went wrong\n%s", senderUsername, out)
 	}
 
