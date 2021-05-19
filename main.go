@@ -396,7 +396,7 @@ func brrr(userid string, text []string) string {
 		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
-	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-4", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-5", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
