@@ -219,7 +219,7 @@ func confirmUser(user, username string) error {
 	fmt.Println("errout", errout)
 	if err != nil {
 		// there's an error, find out if it's just that the key doesn't exist
-		if errout == "ERROR: The specified item could not be found in the keyring\n" {
+		if user != "" {
 			return createNewUserKey(user, username)
 		} else {
 			fmt.Printf("'%s' didn't match\n", errout)
