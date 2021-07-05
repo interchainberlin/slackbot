@@ -455,7 +455,7 @@ func send(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoy tx send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y --keyring-backend test", senderID, recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx bank send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y --keyring-backend test", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
