@@ -1,3 +1,6 @@
 .env
 keys/*
 slackbot
+accounts.json
+test_variables.go
+.idea/
