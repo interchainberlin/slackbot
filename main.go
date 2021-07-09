@@ -304,7 +304,7 @@ func tilbrrr(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	if len(text) != 1 {
+	if len(text) != 1 || text[0] == "" {
 		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/til-brrr [user]'", senderUsername)
 	}
 
@@ -496,7 +496,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	if len(text) != 1 {
+	if len(text) != 1 || text[0] == "" {
 		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/balance [user]'", senderUsername)
 	}
 
