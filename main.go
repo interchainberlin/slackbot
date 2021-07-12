@@ -226,11 +226,11 @@ func confirmUser(user, username string) error {
 			return err
 		}
 	} else {
-		err, out, errout = Shellout(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", user))
+		err, out, errout = Shellout(fmt.Sprintf("pooltoy q auth account $(pooltoy keys show %s -a --keyring-backend test) -o json", user))
 		fmt.Println("err", err)
 		fmt.Println("out", out)
 		fmt.Println("errout", errout)
-		if err != nil && strings.Index(errout, "ERROR: unknown address: bank") != -1 {
+		if err != nil && strings.Index(errout, "Error: rpc error: code = NotFoun") != -1 {
 			return createNewUserAccount(user, username)
 		}
 	}
