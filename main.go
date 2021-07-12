@@ -181,6 +181,9 @@ func Shellout(command string) (error, string, string) {
 	return err, stdout.String(), stderr.String()
 }
 
+// Aadd a slack user to the pooltoy blockchain using the admin user alice and giving the new user non-admin permissions
+// wait 5 seconds so that the transactions is completed
+// return an error if the transaction failed
 func createNewUserAccount(user, username string) error {
 	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
@@ -189,28 +192,35 @@ func createNewUserAccount(user, username string) error {
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
 	time.Sleep(5 * time.Second)
+	// TODO: check the tx hash to see whether the transaction was successful or not.
+	// return the error if the transaction failed
 	return nil
 }
+
+// Add a local key representing this slack user.
+// Return an error if this fails
+// Do not return an error, if the user key already exists
 func createNewUserKey(user, username string) error {
 	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
 	err, _, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
-
-	if err == nil {
-		path, err := os.Getwd()
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		filename := fmt.Sprintf("%s/keys/%s.json", path, user)
-		fmt.Printf("New user %s created and backup saved at %s\n", username, filename)
-		d1 := []byte(errout)
-		err = ioutil.WriteFile(filename, d1, 0644)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-	return createNewUserAccount(user, username)
+	// TODO: figure out if errout contains actual errors.
+	return err
+// 	this is currently broken vvvvvvvv
+// 	path, err := os.Getwd()
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	filename := fmt.Sprintf("%s/keys/%s.json", path, user)
+// 	fmt.Printf("New user %s created and backup saved at %s\n", username, filename)
+// 	d1 := []byte(errout)
+// 	err = ioutil.WriteFile(filename, d1, 0644)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 }
+// Checks if a slack user key and a slack user account exists. If not create that key and/or account.
+// return an error when the creation of the key or the account fails.
 func confirmUser(user, username string) error {
 	fmt.Printf("confirmUser(%s, %s)\n", user, username)
 	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys show %s --keyring-backend test", user))
@@ -220,19 +230,21 @@ func confirmUser(user, username string) error {
 	if err != nil {
 		// there's an error, find out if it's just that the key doesn't exist
 		if user != "" {
-			return createNewUserKey(user, username)
+			err = createNewUserKey(user, username)
+			if (err != nil) {
+				return err
+			}
 		} else {
 			fmt.Printf("'%s' didn't match\n", errout)
 			return err
 		}
-	} else {
-		err, out, errout = Shellout(fmt.Sprintf("pooltoy q auth account $(pooltoy keys show %s -a --keyring-backend test) -o json", user))
-		fmt.Println("err", err)
-		fmt.Println("out", out)
-		fmt.Println("errout", errout)
-		if err != nil && strings.Index(errout, "Error: rpc error: code = NotFoun") != -1 {
-			return createNewUserAccount(user, username)
-		}
+	}
+	err, out, errout = Shellout(fmt.Sprintf("pooltoy q auth account $(pooltoy keys show %s -a --keyring-backend test) -o json", user))
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
+	if err != nil && strings.Index(errout, "Error: rpc error: code = NotFound") != -1 {
+		return createNewUserAccount(user, username)
 	}
 	return nil
 }
