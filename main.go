@@ -187,7 +187,7 @@ func Shellout(command string) (error, string, string) {
 func createNewUserAccount(user, username string) error {
 	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
-	err, out, errout := Shellout(fmt.Sprintf("pooltoy tx pooltoy create-user $(pooltoy keys show %s -a ) false %s %s --from alice -y  ", user, username, user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy tx pooltoy create-user $(pooltoy keys show %s -a --keyring-backend test) false %s %s --from alice -y --keyring-backend test --chain-id pooltoy-5", user, username, user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -202,7 +202,7 @@ func createNewUserAccount(user, username string) error {
 // Do not return an error, if the user key already exists
 func createNewUserKey(user, username string) error {
 	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
-	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys add %s ", user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -227,7 +227,7 @@ func createNewUserKey(user, username string) error {
 // return an error when the creation of the key or the account fails.
 func confirmUser(user, username string) error {
 	fmt.Printf("confirmUser(%s, %s)\n", user, username)
-	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys show %s ", user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys show %s --keyring-backend test", user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -243,7 +243,7 @@ func confirmUser(user, username string) error {
 			return err
 		}
 	}
-	err, out, errout = Shellout(fmt.Sprintf("pooltoy q auth account $(pooltoy keys show %s -a ) -o json", user))
+	err, out, errout = Shellout(fmt.Sprintf("pooltoy q auth account $(pooltoy keys show %s -a --keyring-backend test) -o json", user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -254,7 +254,7 @@ func confirmUser(user, username string) error {
 }
 
 func checkTimeLeft(queriedID string) string {
-	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a )", queriedID)
+	command := fmt.Sprintf("pooltoy q faucet when-brrr -o json $(pooltoy keys show %s -a --keyring-backend test)", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -412,7 +412,7 @@ func brrr(userid string, text []string) string {
 		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
-	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a ) %s --from %s -y  ", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-5", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -471,7 +471,7 @@ func send(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoy tx bank send %s $(pooltoy keys show %s -a ) 1%s --from %s -y  ", senderID, recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx bank send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y --keyring-backend test --chain-id pooltoy-5", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -528,7 +528,7 @@ func balance(userid string, text []string) string {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
 
-	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a ) | jq \".balances\"", queriedID)
+	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to queriedID
@@ -562,17 +562,6 @@ func balance(userid string, text []string) string {
 }
 
 func main() {
-
-	err, out, errout := Shellout("pooltoy config chain-id pooltoy-5")
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
-	err, out, errout = Shellout("pooltoy config keyring-backend test")
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
 	http.HandleFunc("/", botHandler)
 
 	crt := os.Getenv("LETSENCRYPT_CRT")
