@@ -202,23 +202,27 @@ func createNewUserAccount(user, username string) error {
 // Do not return an error, if the user key already exists
 func createNewUserKey(user, username string) error {
 	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
-	err, _, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
+	fmt.Println("err", err)
+	fmt.Println("out", out)
+	fmt.Println("errout", errout)
 	// TODO: figure out if errout contains actual errors.
 	return err
-// 	this is currently broken vvvvvvvv
-// 	path, err := os.Getwd()
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return err
-// 	}
-// 	filename := fmt.Sprintf("%s/keys/%s.json", path, user)
-// 	fmt.Printf("New user %s created and backup saved at %s\n", username, filename)
-// 	d1 := []byte(errout)
-// 	err = ioutil.WriteFile(filename, d1, 0644)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
+	// 	this is currently broken vvvvvvvv
+	// 	path, err := os.Getwd()
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return err
+	// 	}
+	// 	filename := fmt.Sprintf("%s/keys/%s.json", path, user)
+	// 	fmt.Printf("New user %s created and backup saved at %s\n", username, filename)
+	// 	d1 := []byte(errout)
+	// 	err = ioutil.WriteFile(filename, d1, 0644)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
 }
+
 // Checks if a slack user key and a slack user account exists. If not create that key and/or account.
 // return an error when the creation of the key or the account fails.
 func confirmUser(user, username string) error {
@@ -231,7 +235,7 @@ func confirmUser(user, username string) error {
 		// there's an error, find out if it's just that the key doesn't exist
 		if user != "" {
 			err = createNewUserKey(user, username)
-			if (err != nil) {
+			if err != nil {
 				return err
 			}
 		} else {
