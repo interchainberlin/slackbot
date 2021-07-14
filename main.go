@@ -6,7 +6,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/interchainberlin/slackbot/testserver"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,10 +27,25 @@ var (
 	token string
 )
 
+//
+//type TxResult struct {
+//	Height string
+//	Txhash string
+//	RawLog string
+//}
 type TxResult struct {
-	Height string
-	Txhash string
-	RawLog string
+	Code       int
+	Codespace  string
+	Data       string
+	Gas_used   string
+	Gas_wanted string
+	Height     string
+	Info       string
+	Logs       string
+	Raw_log    string
+	Timestamp  string
+	Tx         string
+	Txhash     string
 }
 
 type EventAttribute struct {
@@ -52,6 +69,8 @@ type ResponseCheckTx struct {
 	Events    []Event
 	Codespace string
 }
+
+type UserGetter func(string) (string, string, error)
 
 func init() {
 	token = os.Getenv("VERIFICATION_TOKEN")
@@ -80,7 +99,11 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
 	responseURL := r.Form["response_url"][0]
 
@@ -110,25 +133,24 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	fmt.Fprintf(w, string(jsonResp))
 
-	go handleCommand(responseURL, command, userid, textArray)
+	go handleCommand(responseURL, command, userid, textArray, getUserID)
 }
 
-func handleCommand(responseURL, command, userid string, textArray []string) {
+func handleCommand(responseURL, command, userid string, textArray []string, getUserID UserGetter) {
 	var botReply string
 	switch command {
 	case "/brrr":
-		botReply = brrr(userid, textArray)
+		botReply = brrr(userid, textArray, getUserID)
 	case "/send":
-		botReply = send(userid, textArray)
+		botReply = send(userid, textArray, getUserID)
 	case "/balance":
-		botReply = balance(userid, textArray)
+		botReply = balance(userid, textArray, getUserID)
 	case "/til-brrr":
-		botReply = tilbrrr(userid, textArray)
+		botReply = tilbrrr(userid, textArray, getUserID)
 	default:
 		botReply = fmt.Sprintf("Sorry I don't understand that command %s.", command)
 	}
 
-	// TODO: redundant with above?
 	jsonResp, _ := json.Marshal(struct {
 		Type    string `json:"response_type"`
 		Replace bool   `json:"replace_original"`
@@ -155,7 +177,9 @@ func handleCommand(responseURL, command, userid string, textArray []string) {
 	fmt.Println(string(body))
 
 }
-func getUserID(userID string) (string, string, error) {
+
+var getUserID = func(userID string) (string, string, error) {
+	fmt.Println("THIS IS THE REAL GETUSERID AND SHOULD NOT RUN IN TESTS")
 	api := slack.New(os.Getenv("API_TOKEN"))
 
 	user, err := api.GetUserInfo(userID)
@@ -228,9 +252,12 @@ func createNewUserKey(user, username string) error {
 func confirmUser(user, username string) error {
 	fmt.Printf("confirmUser(%s, %s)\n", user, username)
 	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys show %s --keyring-backend test", user))
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
+	if err!= nil{
+		fmt.Println("confirmUser err", err)
+		fmt.Println("confirmUser out", out)
+		fmt.Println("confirmUser errout", errout)
+	}
+
 	if err != nil {
 		// there's an error, find out if it's just that the key doesn't exist
 		if user != "" {
@@ -259,10 +286,12 @@ func checkTimeLeft(queriedID string) string {
 
 	// create the CLI command for faucet from userid to queriedID
 	err, out, errout := Shellout(command)
+	if err != nil {
+		fmt.Println("err", err)
+		fmt.Println("out", out)
+		fmt.Println("errout", errout)
+	}
 
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
 
 	// parse various responses
 	if err != nil {
@@ -277,37 +306,63 @@ func checkTimeLeft(queriedID string) string {
 	return strings.ReplaceAll(time.TimeLeft, "\"", "")
 }
 
-func txErr(out string) bool {
-	var txResult TxResult
-	json.Unmarshal([]byte(out), &txResult)
+// from send result
+func parseTxResult(out string) (map[string]string, error) {
+	fields := []string{
+		"code",
+		"codespace",
+		"data",
+		"gas_used",
+		"gas_wanted",
+		"height",
+		"info",
+		"logs",
+		"raw_log",
+		"timestamp",
+		"tx",
+		"txhash",
+	}
+	tx := make(map[string]string, len(fields))
+	s := strings.Fields("\n" + out)
 
-	fmt.Println("txResult.Txhash", txResult.Txhash)
-	// wait until the tx is processed
+	for i := 0; i < len(fields); i++ {
+		if fields[i] != s[i*2][:len(s[i*2])-1] {
+			return nil, errors.New(fmt.Sprintf("field %s is not found, %s is found", fields[i], s[i*2]))
+		}
+
+		tx[fields[i]] = s[i*2+1]
+	}
+
+	return tx, nil
+}
+
+func txErr(out string) bool {
+	txMap, err := parseTxResult(out)
+	if err != nil {
+		fmt.Println("failed to parse tx out")
+	}
+
 	time.Sleep(5 * time.Second)
 
-	query := fmt.Sprintf("pooltoy q tx %s", txResult.Txhash)
-	err, out, errout := Shellout(query)
+	query := fmt.Sprintf("pooltoy q tx %s", txMap["txhash"])
+	err, out1, errout := Shellout(query)
+	if err!= nil{
+		fmt.Println("err", err)
+		fmt.Println("out", out1)
+		fmt.Println("txErr errout", errout)
+	}
 
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
+	c, _ := strconv.Atoi(txMap["code"])
+	fmt.Println("[\"code\"]", c)
 
-	var qResult ResponseCheckTx
-	json.Unmarshal([]byte(out), &qResult)
-
-	fmt.Println("qResult", qResult)
-	fmt.Println("qResult[\"code\"]", qResult.Code)
-
-	// check if code - 0
-	// code is part of an error log
-	if qResult.Code != 0 {
+	if c != 0 {
 		return true
 	}
 	return false
 }
 
 // slashes
-func tilbrrr(userid string, text []string) string {
+func tilbrrr(userid string, text []string, getUserID UserGetter) string {
 	// confirm sender user id key exists
 	// if not create key
 	// if not create account
@@ -364,7 +419,7 @@ func tilbrrr(userid string, text []string) string {
 
 	return fmt.Sprintf("⏳ %s til %s can brrr again.", t.String(), queriedUsername)
 }
-func brrr(userid string, text []string) string {
+func brrr(userid string, text []string, getUserID UserGetter) string {
 
 	if len(text) < 2 {
 		return "Sorry, I don't understand that command. Please follow the format '/brrr [recipient] [emoji]' where emoji is part of the basic emoji list outlined here: https://unicode.org/Public/emoji/5.0/emoji-test.txt"
@@ -417,10 +472,11 @@ func brrr(userid string, text []string) string {
 
 	// create the CLI command for faucet from userid to recipientID
 	err, out, errout := Shellout(command)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
+	if err!= nil{
+		fmt.Println("err", err)
+		fmt.Println("out", out)
+		fmt.Println("errout", errout)
+	}
 
 	// parse various responses
 	if err != nil {
@@ -433,7 +489,7 @@ func brrr(userid string, text []string) string {
 
 	return fmt.Sprintf("Success %s! You sent %s a %s. Check their balance like: /balance @%s", senderUsername, recipientUsername, emoji, recipientUsername)
 }
-func send(userid string, text []string) string {
+func send(userid string, text []string, getUserID UserGetter) string {
 
 	// confirm sender user id key exists
 	// if not create key
@@ -476,11 +532,11 @@ func send(userid string, text []string) string {
 
 	// create the CLI command for faucet from userid to recipientID
 	err, out, errout := Shellout(command)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
-
+	if err!= nil {
+		fmt.Println("err", err)
+		fmt.Println("send out", out)
+		fmt.Println("errout", errout)
+	}
 	// parse various responses
 	if err != nil {
 		return err.Error()
@@ -498,7 +554,7 @@ func send(userid string, text []string) string {
 	return fmt.Sprintf("Success %s! You sent %s a %s. Check their balance like: /balance @%s", senderUsername, recipientUsername, emoji, recipientUsername)
 }
 
-func balance(userid string, text []string) string {
+func balance(userid string, text []string, getUserID UserGetter) string {
 
 	// confirm sender user id key exists
 	// if not create key
@@ -533,10 +589,11 @@ func balance(userid string, text []string) string {
 
 	// create the CLI command for faucet from userid to queriedID
 	err, out, errout := Shellout(command)
-
-	fmt.Println("err", err)
-	fmt.Println("out", out)
-	fmt.Println("errout", errout)
+	if err!= nil{
+		fmt.Println("err", err)
+		fmt.Println("out", out)
+		fmt.Println("errout", errout)
+	}
 
 	// parse various responses
 	if err != nil {
@@ -548,7 +605,10 @@ func balance(userid string, text []string) string {
 		Amount string
 	}
 	var coins []Coin
-	json.Unmarshal([]byte(out), &coins)
+	err = json.Unmarshal([]byte(out), &coins)
+	if err != nil {
+		fmt.Println("unmarshal error", err)
+	}
 
 	balancetext := fmt.Sprintf("%s's balance:\n", queriedUsername)
 	for i := 0; i < len(coins); i++ {
@@ -562,6 +622,9 @@ func balance(userid string, text []string) string {
 }
 
 func main() {
+
+	go testserver.ForwardServer()
+
 	http.HandleFunc("/", botHandler)
 
 	crt := os.Getenv("LETSENCRYPT_CRT")
