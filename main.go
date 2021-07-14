@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/interchainberlin/slackbot/testserver"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -205,9 +204,13 @@ func Shellout(command string) (error, string, string) {
 	return err, stdout.String(), stderr.String()
 }
 
+<<<<<<< HEAD
 // Aadd a slack user to the pooltoy blockchain using the admin user alice and giving the new user non-admin permissions
 // wait 5 seconds so that the transactions is completed
 // return an error if the transaction failed
+=======
+// working directory is not the directory keeps the key, the~/.pooltoy/keyring_test is? however, the key info is stored in file with suffix .info rathter than .json
+>>>>>>> 199f573 (test edge cases and change confirmUser function)
 func createNewUserAccount(user, username string) error {
 	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
@@ -221,9 +224,12 @@ func createNewUserAccount(user, username string) error {
 	return nil
 }
 
+<<<<<<< HEAD
 // Add a local key representing this slack user.
 // Return an error if this fails
 // Do not return an error, if the user key already exists
+=======
+>>>>>>> 199f573 (test edge cases and change confirmUser function)
 func createNewUserKey(user, username string) error {
 	fmt.Printf("createNewUserKey(%s, %s)\n", user, username)
 	err, out, errout := Shellout(fmt.Sprintf("pooltoy keys add %s --keyring-backend test", user))
@@ -259,6 +265,7 @@ func confirmUser(user, username string) error {
 	}
 
 	if err != nil {
+<<<<<<< HEAD
 		// there's an error, find out if it's just that the key doesn't exist
 		if user != "" {
 			err = createNewUserKey(user, username)
@@ -276,6 +283,22 @@ func confirmUser(user, username string) error {
 	fmt.Println("errout", errout)
 	if err != nil && strings.Index(errout, "Error: rpc error: code = NotFound") != -1 {
 		return createNewUserAccount(user, username)
+=======
+
+			return errors.New(fmt.Sprintf("%s is not found", user))
+
+	} else {
+		err, out, errout = Shellout(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", user))
+		fmt.Println(fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", user))
+		if err!= nil{
+			fmt.Println("err", err)
+			fmt.Println("out", out)
+			fmt.Println("confirmUser errout", errout)
+		}
+		if err != nil && strings.Index(errout, "ERROR: unknown address: bank") != -1 {
+			return createNewUserAccount(user, username)
+		}
+>>>>>>> 199f573 (test edge cases and change confirmUser function)
 	}
 	return nil
 }
@@ -336,6 +359,7 @@ func parseTxResult(out string) (map[string]string, error) {
 	return tx, nil
 }
 
+// temporal solution for the cosmos sdk issue #9663, output format issue
 func txErr(out string) bool {
 	txMap, err := parseTxResult(out)
 	if err != nil {
@@ -566,7 +590,7 @@ func balance(userid string, text []string, getUserID UserGetter) string {
 	err = confirmUser(senderID, senderUsername)
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
-	}
+		}
 
 	if len(text) != 1 || text[0] == "" {
 		return fmt.Sprintf("Sorry %s, I don't understand that command. Please follow the format '/balance [user]'", senderUsername)
@@ -583,7 +607,6 @@ func balance(userid string, text []string, getUserID UserGetter) string {
 	if err != nil {
 		return fmt.Sprintf("ERROR: %s (%s)", err.Error(), userid)
 	}
-
 	command := fmt.Sprintf("pooltoy q bank -o json balances $(pooltoy keys show %s -a --keyring-backend test) | jq \".balances\"", queriedID)
 	fmt.Printf("Try command '%s\n", command)
 
@@ -623,8 +646,6 @@ func balance(userid string, text []string, getUserID UserGetter) string {
 
 func main() {
 
-	go testserver.ForwardServer()
-
 	http.HandleFunc("/", botHandler)
 
 	crt := os.Getenv("LETSENCRYPT_CRT")
@@ -634,5 +655,6 @@ func main() {
 	} else {
 		log.Fatalln(http.ListenAndServeTLS(":"+port, crt, key, nil))
 	}
-
 }
+
+
