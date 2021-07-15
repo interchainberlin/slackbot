@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -69,7 +70,6 @@ func startChain() {
 		fmt.Println("out", out)
 		fmt.Println("errout", errout)
 	}
-	fmt.Println("after init")
 	Shellout(`pooltoy start`)
 }
 
@@ -101,6 +101,7 @@ var GetUserID = func(userID string) (string, string, error) {
 // -----------------------------------------------------------------------------
 // test ConfirmUser
 // -----------------------------------------------------------------------------
+// even though the user exists, the addresss is always changing everytime after retart pooltoy
 func TestConfirmUser_ExistentUser(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
@@ -111,12 +112,13 @@ func TestConfirmUser_ExistentUser(t *testing.T) {
 	}
 }
 
+// user4 is not in accounts.json
 func TestConfirmUser_NonExistentUser(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
 
 	err := confirmUser(UserID4, UserName4)
-	if errors.Is(err, errors.New(fmt.Sprintf("%s is not found", UserID4))){
+	if err!= nil{
 		t.Fatal(err)
 	}
 }
@@ -124,58 +126,15 @@ func TestConfirmUser_NonExistentUser(t *testing.T) {
 // -----------------------------------------------------------------------------
 // test createNewUser
 // -----------------------------------------------------------------------------
-// todo check why failed
-//func TestCreateNewUserAccount(t *testing.T){
-//	go startChain()
-//	time.Sleep(20 * time.Second)
-//
-//	var userID ="U01JT5U5WL0"
-//	var userName = "newuser"
-//	err := confirmUser(userID, userName)
-//	//if !errors.Is(err, errors.New(fmt.Sprintf("%s is not found", userID))){
-//	//	t.Fatal(err)
-//	//}
-//	if err == nil{
-//		t.Fatal(err)
-//	}
-//	err = createNewUserAccount(userID, userName)
-//	if err!= nil{
-//		t.Fatal(err)
-//	}
-//	err = confirmUser(userID, userName)
-//	if errors.Is(err, errors.New(fmt.Sprintf("%s is not found", userID))){
-//		fmt.Println("=======created user is not found==")
-//		t.Fatal(err)
-//	}
-//}
-//
-//func TestCreateNewUserKey(t *testing.T){
-//	go startChain()
-//	time.Sleep(20 * time.Second)
-//
-//	var userID ="U01JT5U5WL0"
-//	var userName = "newuser"
-//	err := confirmUser(userID, userName)
-//	//if !errors.Is(err, errors.New(fmt.Sprintf("%s is not found", userID))){
-//	//	t.Fatal(err)
-//	//}
-//	if err == nil{
-//		t.Fatal(err)
-//	}
-//	err = createNewUserKey(userID, userName)
-//	if err!= nil{
-//		t.Fatal(err)
-//	}
-//	err = confirmUser(userID, userName)
-//	if errors.Is(err, errors.New(fmt.Sprintf("%s is not found", userID))){
-//		fmt.Println("=======created user is not found==")
-//		t.Fatal(err)
-//	}
-//	balance1 := balance(userID,[]string{"@<U01JT5U5WL0|newuser"} , GetUserID)
-//	fmt.Println("balance of new user", balance1)
-//}
+func TestCreateNewUserKey(t *testing.T){
+	go startChain()
+	time.Sleep(20 * time.Second)
 
-
+	err := createNewUserKey(UserID6, UserName6)
+	if err!= nil{
+		t.Fatal(err)
+	}
+}
 
 // -----------------------------------------------------------------------------
 // test Brrr
@@ -230,6 +189,7 @@ func TestTilBrrr(t *testing.T) {
 	}
 
 	brrr(UserID1, []string{User3, ":wave:"}, GetUserID)
+	time.Sleep(5*time.Second)
 	til = tilbrrr(UserID1, []string{User1}, GetUserID)
 	fmt.Println(til)
 	if til != fmt.Sprintf("⏳ 1 day til %s can brrr again.", UserName1) {
@@ -255,33 +215,34 @@ func TestBalance(t *testing.T) {
 	stopChain()
 }
 
-//  existent user checks nonexistent user's balance
+//  existent user checks nonexistent user's balance, Alice will create this recipient
+// todo failed.
 func TestBalance_UserNotExist(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
 
 	var testCommand = []string{User4}
 	balanceResp := balance(UserID1, testCommand, GetUserID)
-	if balanceResp != fmt.Sprintf("ERROR: %s is not found (%s)", UserID4, UserID1) {
+	if balanceResp != fmt.Sprintf("%s is broke 🕳", UserName4) {
 		t.Fatal(balanceResp)
 	}
 
 	stopChain()
 }
 
-//non-existent user checks nonexistent user's balance
-func TestBalance_UserNotExist1(t *testing.T) {
-	go startChain()
-	time.Sleep(15 * time.Second)
-
-	var testCommand = []string{User6}
-	balanceResp := balance(UserID4, testCommand, GetUserID)
-	if balanceResp != fmt.Sprintf("ERROR: %s is not found (%s)", UserID4, UserID4) {
-		t.Fatal(balanceResp)
-	}
-
-	stopChain()
-}
+//this case is not possible if using slackAPI: nonexistent user checks nonexistent user's balance
+//func TestBalance_UserNotExist1(t *testing.T) {
+//	go startChain()
+//	time.Sleep(15 * time.Second)
+//
+//	var testCommand = []string{User6}
+//	balanceResp := balance(UserID4, testCommand, GetUserID)
+//	if balanceResp != fmt.Sprintf("ERROR: %s is not found (%s)", UserID4, UserID4) {
+//		t.Fatal(balanceResp)
+//	}
+//
+//	stopChain()
+//}
 
 // -----------------------------------------------------------------------------
 // test send
@@ -301,6 +262,7 @@ func TestSend(t *testing.T) {
 	stopChain()
 }
 
+// The sender does not have that Emoji
 func TestSend_OutOfBalance(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
@@ -330,20 +292,44 @@ func TestSend_OutOfBalance(t *testing.T) {
 //	stopChain()
 //}
 
-func TestSend_FromNonExistentUser(t *testing.T) {
+// The sender does not have enough that Emoji
+func TestSend_OutOfBalance1(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
 
-	var testCommand = []string{User1, ":avocado:"}
-	sendResp := send(UserID4, testCommand, GetUserID)
-	fmt.Println("sendResp:", sendResp)
-	if sendResp != fmt.Sprintf("ERROR: %s is not found (%s)",UserID4, UserID4) {
+	var testCommand = []string{User3, ":avocado:"}
+	sendResp := send(UserID1, testCommand, GetUserID)
+
+	// 1st send: successful
+	if sendResp != fmt.Sprintf("Success %s! You sent %s a 🥑. Check their balance like: /balance @%s", UserName1, UserName3, UserName3){
+		t.Fatal(sendResp)
+	}
+	//time.Sleep(5*time.Second)
+	// 2nd send: successful
+	sendResp = send(UserID1, testCommand, GetUserID)
+	if strings.Index(sendResp, "insufficient funds") == -1{
 		t.Fatal(sendResp)
 	}
 
 	stopChain()
 }
 
+//func TestSend_FromNonExistentUser(t *testing.T) {
+//	go startChain()
+//	time.Sleep(20 * time.Second)
+//
+//	var testCommand = []string{User1, ":avocado:"}
+//	sendResp := send(UserID4, testCommand, GetUserID)
+//	fmt.Println("sendResp:", sendResp)
+//	if sendResp != fmt.Sprintf("ERROR: %s is not found (%s)",UserID4, UserID4) {
+//		t.Fatal(sendResp)
+//	}
+//
+//	stopChain()
+//}
+
+// error: raw_log: account address cosmos1fdxyd3s5njurn0x0qu86fslvuajm2kftdur5ku is not allowed
+//  to receive transactions: unauthorized' why this is not allowed?
 func TestSendTo_NonExistentUser(t *testing.T) {
 	go startChain()
 	time.Sleep(20 * time.Second)
@@ -357,5 +343,4 @@ func TestSendTo_NonExistentUser(t *testing.T) {
 
 	stopChain()
 }
-
 
