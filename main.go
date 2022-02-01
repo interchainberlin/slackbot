@@ -98,18 +98,6 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("textArray:'%s'\n", textArray)
 	fmt.Printf("textArray len:'%d'\n", len(textArray))
 
-	botReply := "Processing your request, please standby ⏳"
-	jsonResp, _ := json.Marshal(struct {
-		Type string `json:"response_type"`
-		Text string `json:"text"`
-	}{
-		Type: "in_channel",
-		Text: fmt.Sprintf("```%s```", botReply),
-	})
-
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, string(jsonResp))
-
 	go handleCommand(responseURL, command, userid, textArray)
 }
 
