@@ -114,6 +114,7 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleCommand(responseURL, command, userid string, textArray []string) {
+	fmt.Println("textArray", textArray)
 	var botReply string
 	switch command {
 	case "/brrr":
