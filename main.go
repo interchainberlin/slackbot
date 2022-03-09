@@ -164,8 +164,11 @@ func getUserID(userID string) (string, string, error) {
 		fmt.Printf("%s\n", err)
 		return userID, "", err
 	}
-
+	fmt.Println(user)
 	username := user.Profile.DisplayNameNormalized
+	if len(username) < 1 {
+		username = user.ID
+	}
 	return user.ID, username, nil
 	// fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
 }
