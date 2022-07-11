@@ -97,7 +97,7 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("command: ", command, "\nuser_id: ", userid, "\nuser_name: ", username, "\nchannel_id", channelid, "\nchannel_name:", channelname, "\ntext: ", text)
 	fmt.Printf("textArray:'%s'\n", textArray)
 	fmt.Printf("textArray len:'%d'\n", len(textArray))
-
+	
 	botReply := "Processing your request, please standby ⏳"
 	jsonResp, _ := json.Marshal(struct {
 		Type string `json:"response_type"`
@@ -114,6 +114,7 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleCommand(responseURL, command, userid string, textArray []string) {
+	fmt.Println("textArray", textArray)
 	var botReply string
 	switch command {
 	case "/brrr":
@@ -163,8 +164,11 @@ func getUserID(userID string) (string, string, error) {
 		fmt.Printf("%s\n", err)
 		return userID, "", err
 	}
-
+	fmt.Println(user)
 	username := user.Profile.DisplayNameNormalized
+	if len(username) < 1 {
+		username = user.ID
+	}
 	return user.ID, username, nil
 	// fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)
 }
@@ -412,7 +416,8 @@ func brrr(userid string, text []string) string {
 		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
-	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id 7", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-7", recipientID, emoji, senderID)
+
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
