@@ -13,11 +13,11 @@ then `source .env`
 and start with `go run main.go`.
 
 ## Instruction on using pooltoy in slack channel
-`/brrr @slack_username [emoji]`: min emoji
+`/brrr @slack_username [emoji]`: mint emoji
 
 `/send @slack_uername [emoji]`: send emoji to a user
 
 `/balance @slack_username`: query balance
 
-`/til-brrr @slack_username`: query the earliest next allowed `/brrr` time.
+`/til-brrr @slack_username`: query the next earliest allowed `/brrr` time.
 
