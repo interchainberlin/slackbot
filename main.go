@@ -187,7 +187,7 @@ func Shellout(command string) (error, string, string) {
 func createNewUserAccount(user, username string) error {
 	fmt.Printf("createNewUserAccount(%s, %s)\n", user, username)
 	username = strings.ReplaceAll(username, " ", "_")
-	err, out, errout := Shellout(fmt.Sprintf("pooltoy tx pooltoy create-user $(pooltoy keys show %s -a --keyring-backend test) false %s %s --from alice -y --keyring-backend test --chain-id pooltoy-5", user, username, user))
+	err, out, errout := Shellout(fmt.Sprintf("pooltoy tx pooltoy create-user $(pooltoy keys show %s -a --keyring-backend test) false %s %s --from alice -y --keyring-backend test --chain-id pooltoy-7", user, username, user))
 	fmt.Println("err", err)
 	fmt.Println("out", out)
 	fmt.Println("errout", errout)
@@ -412,7 +412,7 @@ func brrr(userid string, text []string) string {
 		return fmt.Sprintf("Sorry %s, you can only send an emoji once a day. Please try again tomorrow 📆", senderUsername)
 	}
 
-	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id pooltoy-5", recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx faucet mintfor $(pooltoy keys show %s -a --keyring-backend test) %s --from %s -y --keyring-backend test --chain-id 7", recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
@@ -471,7 +471,7 @@ func send(userid string, text []string) string {
 		return emojiError.Error()
 	}
 
-	command := fmt.Sprintf("pooltoy tx bank send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y --keyring-backend test --chain-id pooltoy-5", senderID, recipientID, emoji, senderID)
+	command := fmt.Sprintf("pooltoy tx bank send %s $(pooltoy keys show %s -a --keyring-backend test) 1%s --from %s -y --keyring-backend test --chain-id pooltoy-7", senderID, recipientID, emoji, senderID)
 	fmt.Printf("Try command '%s\n", command)
 
 	// create the CLI command for faucet from userid to recipientID
